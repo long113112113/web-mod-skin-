@@ -1,0 +1,4 @@
+## 2026-01-23 - Prisma Dynamic SQL Injection Risk
+**Vulnerability:** Improper string interpolation in `prisma.$queryRaw`. The code used `${goalId ? `AND goalId = ${goalId}` : ''}` which injects raw strings into the query parameter, potentially causing syntax errors or injection if not handled correctly by the DB driver, and functionally breaking the intended filter logic.
+**Learning:** `prisma.$queryRaw` uses tagged template literals for parameterization. To include dynamic fragments, you MUST use `Prisma.sql` for the fragments and `Prisma.empty` for empty states, ensuring that nested values are also correctly parameterized.
+**Prevention:** Always use `Prisma.sql` when constructing dynamic SQL fragments for `$queryRaw` and avoid direct string manipulation or ternary operators returning raw strings inside the query template.
