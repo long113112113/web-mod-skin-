@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile } from 'fs/promises'
 import path from 'path'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { canManageSoftware } from '@/lib/auth-utils'
 
 export const runtime = 'nodejs'
 // Extend timeout for large file uploads
@@ -40,6 +43,14 @@ export async function POST(
   const startTime = Date.now()
   
   try {
+    // Check authentication and authorization
+    const session = await getServerSession(authOptions)
+
+    if (!session || !canManageSoftware(session.user.role)) {
+      console.log('❌ Unauthorized upload attempt')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 
