@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 
 // GET /api/donations/stats - Get donation statistics
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     // Admin access - detailed statistics
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -163,7 +164,7 @@ export async function GET(request: NextRequest) {
         FROM donations 
         WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
           AND status = 'COMPLETED'
-          ${goalId ? `AND goalId = ${goalId}` : ''}
+          ${goalId ? Prisma.sql`AND goalId = ${goalId}` : Prisma.empty}
         GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
         ORDER BY month DESC
       `
