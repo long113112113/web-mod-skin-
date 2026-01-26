@@ -7,45 +7,54 @@ async function createAdmin() {
   try {
     console.log('🔐 Creating admin account...')
 
+    const adminEmail = process.env.ADMIN_EMAIL
+    const adminPassword = process.env.ADMIN_PASSWORD
+    const backupEmail = process.env.BACKUP_ADMIN_EMAIL
+    const backupPassword = process.env.BACKUP_ADMIN_PASSWORD
+
+    if (!adminEmail || !adminPassword || !backupEmail || !backupPassword) {
+      throw new Error('Missing required environment variables: ADMIN_EMAIL, ADMIN_PASSWORD, BACKUP_ADMIN_EMAIL, BACKUP_ADMIN_PASSWORD')
+    }
+
     // Tạo tài khoản admin
     const adminUser = await prisma.user.upsert({
-      where: { email: 'admin@webmodskin.com' },
+      where: { email: adminEmail },
       update: {
         role: Role.ADMIN,
-        password: await hash('Admin@2025!', 12),
+        password: await hash(adminPassword, 12),
       },
       create: {
-        email: 'admin@webmodskin.com',
+        email: adminEmail,
         name: 'Administrator',
         role: Role.ADMIN,
         emailVerified: new Date(),
-        password: await hash('Admin@2025!', 12),
+        password: await hash(adminPassword, 12),
       },
     })
 
     console.log('✅ Admin account created successfully!')
-    console.log(`📧 Email: admin@webmodskin.com`)
-    console.log(`🔑 Password: Admin@2025!`)
+    console.log(`📧 Email: ${adminEmail}`)
+    console.log(`🔑 Password: [HIDDEN]`)
     console.log(`👤 User ID: ${adminUser.id}`)
     
     // Tạo thêm admin backup nếu cần
     const backupAdmin = await prisma.user.upsert({
-      where: { email: 'backup@webmodskin.com' },
+      where: { email: backupEmail },
       update: {
         role: Role.ADMIN,
       },
       create: {
-        email: 'backup@webmodskin.com',
+        email: backupEmail,
         name: 'Backup Admin',
         role: Role.ADMIN,
         emailVerified: new Date(),
-        password: await hash('Backup@2025!', 12),
+        password: await hash(backupPassword, 12),
       },
     })
 
     console.log('✅ Backup admin account created!')
-    console.log(`📧 Backup Email: backup@webmodskin.com`)
-    console.log(`🔑 Backup Password: Backup@2025!`)
+    console.log(`📧 Backup Email: ${backupEmail}`)
+    console.log(`🔑 Backup Password: [HIDDEN]`)
 
   } catch (error) {
     console.error('❌ Error creating admin:', error)
