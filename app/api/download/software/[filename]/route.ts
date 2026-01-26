@@ -1,7 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 import { readFile, stat } from 'fs/promises'
-import { join } from 'path'
+import { join, resolve, sep } from 'path'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -14,7 +14,13 @@ export async function GET(
     const filename = params.filename
 
     // Security: Validate filename to prevent directory traversal
-    if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    const base = process.env.UPLOADS_BASE_PATH || join(process.cwd(), 'uploads')
+    const uploadsDir = resolve(base, 'software')
+    const filePath = resolve(uploadsDir, filename)
+
+    // Ensure the resolved path is within the allowed directory
+    // We append the separator to prevent sibling directory attacks (e.g., /software-secret)
+    if (!filePath.startsWith(uploadsDir + sep)) {
       return NextResponse.json(
         { message: 'Invalid filename' },
         { status: 400 }
@@ -22,9 +28,6 @@ export async function GET(
     }
 
     // Check if file exists
-    const base = process.env.UPLOADS_BASE_PATH || join(process.cwd(), 'uploads')
-    const filePath = join(base, 'software', filename)
-    
     try {
       await stat(filePath)
     } catch {
