@@ -1,6 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { readFile, stat } from 'fs/promises'
+import { createReadStream } from 'fs'
+import { stat } from 'fs/promises'
+import { Readable } from 'stream'
 import { join } from 'path'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
@@ -88,16 +90,20 @@ export async function GET(
     }
 
     // Read and serve file
-    const fileBuffer = await readFile(filePath)
+    const fileStat = await stat(filePath)
     const originalFilename = filename.split('_').slice(2).join('_').split('.')[0] + '.' + filename.split('.').pop()
     
+    // Create read stream
+    const stream = createReadStream(filePath)
+    const webStream = Readable.toWeb(stream) as ReadableStream
+
     // Set appropriate headers for file download
     const headers = new Headers()
     headers.set('Content-Type', 'application/octet-stream')
     headers.set('Content-Disposition', `attachment; filename="${product.title.replace(/[^a-zA-Z0-9.-]/g, '_')}_${originalFilename}"`)
-    headers.set('Content-Length', fileBuffer.length.toString())
+    headers.set('Content-Length', fileStat.size.toString())
 
-    return new NextResponse(new Uint8Array(fileBuffer), {
+    return new NextResponse(webStream, {
       status: 200,
       headers
     })
