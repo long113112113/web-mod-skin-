@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
-import { join, resolve } from 'path'
+import { join, resolve, sep } from 'path'
 
 export async function GET(
   request: NextRequest,
@@ -21,7 +21,7 @@ export async function GET(
     const filePath = resolve(previewsBase, filename)
 
     // Verify resolved path is strictly within the intended directory
-    if (!filePath.startsWith(resolve(previewsBase))) {
+    if (!filePath.startsWith(resolve(previewsBase) + sep)) {
       console.warn(`Path traversal attempt blocked (resolved path mismatch): ${filePath}`);
       return new NextResponse('Access denied', { status: 403 });
     }

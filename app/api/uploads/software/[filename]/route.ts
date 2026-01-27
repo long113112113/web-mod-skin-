@@ -8,8 +8,7 @@ export async function GET(
 ) {
   try {
     const filename = params.filename
-    //Nên validate chống path traversal
-    //Tui ko rõ có ảnh hưởng gì đến logic gửi file lên không nhưng ông nên check lại flow
+
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
       return new NextResponse('Access denied', { status: 400 });
     }
@@ -19,7 +18,7 @@ export async function GET(
     const filePath = path.resolve(softwareBase, filename)
 
     // Verify resolved path is strictly within the intended directory
-    if (!filePath.startsWith(path.resolve(softwareBase))) {
+    if (!filePath.startsWith(path.resolve(softwareBase) + path.sep)) {
       return new NextResponse('Access denied', { status: 403 });
     }
 

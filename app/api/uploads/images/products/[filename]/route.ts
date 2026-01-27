@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
-import { join, resolve } from 'path'
+import { join, resolve, sep } from 'path'
 
 export async function GET(
   request: NextRequest,
@@ -8,8 +8,7 @@ export async function GET(
 ) {
   try {
     const filename = params.filename
-    //Nên validate chống path traversal
-    //Tui ko rõ có ảnh hưởng gì đến logic gửi file lên không nhưng ông nên check lại flow
+
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
       return new NextResponse('Access denied', { status: 400 });
     }
@@ -18,7 +17,7 @@ export async function GET(
     const imagesBase = join(base, 'images', 'products');
     const filePath = resolve(imagesBase, filename)
 
-    if (!filePath.startsWith(resolve(imagesBase))) {
+    if (!filePath.startsWith(resolve(imagesBase) + sep)) {
       return new NextResponse('Access denied', { status: 403 });
     }
 
